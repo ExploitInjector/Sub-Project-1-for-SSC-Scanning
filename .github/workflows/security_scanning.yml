@@ -1,40 +1,51 @@
-name: SBOM Security Pipeline
+name: Syft SBOM & Trivy Security Pipeline
 
 on:
-  workflow_dispatch:  # Lehetővé teszi a manuális indítást
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   security-scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read          # Kód letöltéséhez kell
+      security-events: write  # A GitHub Security fül írásához (SARIF feltöltés)
 
     steps:
-    # 1. Leklónozzuk a repository-t, hogy a Syft lássa a fájlokat
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # 2. Syft telepítése
-    - name: Install Syft
-      run: |
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      # 1. Syft telepítése és SBOM generálása
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
-    # 3. Trivy telepítése
-    - name: Install Trivy
-      run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Generate SBOM for Repository with Syft
+        run: syft dir:. -o cyclonedx-json > repo-sbom.json
 
-    # 4. SBOM generálása a repository-ból (dir:.)
-    - name: Generate SBOM for Repository with Syft
-      run: syft dir:. -o cyclonedx-json > repo-sbom.json
+      # 2. Trivy futtatása a Syft SBOM-on (Action segítségével)
+      - name: Scan Syft SBOM with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: 'sbom'
+          scan-ref: 'repo-sbom.json'  # Ide adjuk át a Syft SBOM fájlt!
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
 
-    # 5. SBOM szkennelése a Trivy-vel
-    - name: Scan SBOM with Trivy
-      run: trivy sbom repo-sbom.json -f json -o trivy-sbom-scan.json
+      # 3. SARIF eredmények feltöltése a GitHub Security fülre
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-results.sarif'
 
-    # 6. Eredmények feltöltése (frissítve v4-re a jobb teljesítmény és biztonság miatt)
-    - name: Upload SBOM and Scan Results as Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: Security-Reports
-        path: |
-          repo-sbom.json
-          trivy-sbom-scan.json
+      # 4. Az eredeti Syft SBOM lementése artifact-ként
+      - name: Upload Syft SBOM as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Syft-SBOM
+          path: repo-sbom.json
