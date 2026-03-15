@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sub-project-1-for-ssc-scanning"
+version = "0.1.0"
+description = "Test project for Syft and Trivy SBOM generation"
+requires-python = ">=3.12"
+dependencies = [
+    "requests==2.19.0",
+    "urllib3==1.25.8"
+]
