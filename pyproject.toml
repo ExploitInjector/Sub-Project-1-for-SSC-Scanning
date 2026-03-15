@@ -9,5 +9,5 @@ description = "Test project for Syft and Trivy SBOM generation"
 requires-python = ">=3.12"
 dependencies = [
     "requests==2.19.0",
-    "urllib3==1.25.8"
+    "urllib3==1.21.1"
 ]
