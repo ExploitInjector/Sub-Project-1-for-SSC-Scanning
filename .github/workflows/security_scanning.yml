@@ -1,0 +1,40 @@
+name: SBOM Security Pipeline
+
+on:
+  workflow_dispatch:  # Lehetővé teszi a manuális indítást
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Leklónozzuk a repository-t, hogy a Syft lássa a fájlokat
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # 2. Syft telepítése
+    - name: Install Syft
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+    # 3. Trivy telepítése
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+    # 4. SBOM generálása a repository-ból (dir:.)
+    - name: Generate SBOM for Repository with Syft
+      run: syft dir:. -o cyclonedx-json > repo-sbom.json
+
+    # 5. SBOM szkennelése a Trivy-vel
+    - name: Scan SBOM with Trivy
+      run: trivy sbom repo-sbom.json -f json -o trivy-sbom-scan.json
+
+    # 6. Eredmények feltöltése (frissítve v4-re a jobb teljesítmény és biztonság miatt)
+    - name: Upload SBOM and Scan Results as Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Security-Reports
+        path: |
+          repo-sbom.json
+          trivy-sbom-scan.json
