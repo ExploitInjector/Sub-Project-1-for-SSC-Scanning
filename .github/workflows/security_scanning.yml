@@ -49,3 +49,13 @@ jobs:
         with:
           name: Syft-SBOM
           path: repo-sbom.json
+
+      - name: Upload SBOM to Dependency-Track
+        uses: DependencyTrack/gh-upload-sbom@v3
+        with:
+          serverHostname: ${{ secrets.DEPENDENCYTRACK_URL }}
+          apiKey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
+          projectName: 'Sub-Project-1-for-SSC-Scanning'
+          projectVersion: '1'
+          bomFilename: "repo-sbom.json"
+          autoCreate: false
