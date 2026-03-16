@@ -55,7 +55,8 @@ jobs:
         with:
           serverHostname: ${{ secrets.DEPENDENCYTRACK_URL }}
           apiKey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
-          projectName: 'Sub-Project-1-for-SSC-Scanning'
-          projectVersion: '1'
+          project: "1cbf0998-8a58-4f89-827d-ea6cb49088de"
           bomFilename: "repo-sbom.json"
           autoCreate: false
+          port: 80
+          protocol: "https"
