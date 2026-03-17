@@ -43,20 +43,18 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      # 4. Az eredeti Syft SBOM lementése artifact-ként
+      # 4. Az eredeti Syft SBOM lementése artifact-ként (maradhat, ha szükséged van rá)
       - name: Upload Syft SBOM as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Syft-SBOM
           path: repo-sbom.json
 
-      - name: Upload SBOM to Dependency-Track
-        uses: DependencyTrack/gh-upload-sbom@v3
-        with:
-          serverHostname: ${{ secrets.DEPENDENCYTRACK_URL }}
-          apiKey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
-          project: "31c7fbf4-22be-4b15-a0f4-5f39d3ecc04b"
-          bomFilename: "repo-sbom.json"
-          autoCreate: false
-          port: 443
-          protocol: "https"
+      # 5. SBOM feltöltése Dependency-Track-re curl használatával
+      - name: Upload SBOM to Dependency-Track via curl
+        run: |
+          curl -v -X "POST" "${{ secrets.DEPENDENCYTRACK_URL }}" \
+               -H 'Content-Type: multipart/form-data' \
+               -H "X-Api-Key: ${{ secrets.DEPENDENCYTRACK_APIKEY }}" \
+               -F "project=31c7fbf4-22be-4b15-a0f4-5f39d3ecc04b" \
+               -F "bom=@repo-sbom.json"
