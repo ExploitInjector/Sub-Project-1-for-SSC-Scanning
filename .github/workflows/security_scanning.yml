@@ -56,5 +56,5 @@ jobs:
           curl -v -X "POST" "${{ secrets.DEPENDENCYTRACK_URL }}" \
                -H 'Content-Type: multipart/form-data' \
                -H "X-Api-Key: ${{ secrets.DEPENDENCYTRACK_APIKEY }}" \
-               -F "project=31c7fbf4-22be-4b15-a0f4-5f39d3ecc04b" \
+               -F "project= ${{ secrets.DEPENDENCYTRACK_PROJECT }}" \
                -F "bom=@repo-sbom.json"
