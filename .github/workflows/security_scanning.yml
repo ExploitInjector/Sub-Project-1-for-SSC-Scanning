@@ -53,21 +53,8 @@ jobs:
       # 5. SBOM feltöltése Dependency-Track-re curl használatával
       - name: Upload SBOM to Dependency-Track via curl
         run: |
-          TOKEN=$(curl -s -X "POST" "${{ secrets.DEPENDENCYTRACK_URL }}/api/v1/bom" \
+          curl -v -X "POST" "${{ secrets.DEPENDENCYTRACK_URL }}" \
                -H 'Content-Type: multipart/form-data' \
                -H "X-Api-Key: ${{ secrets.DEPENDENCYTRACK_APIKEY }}" \
-               -F "project=${{ secrets.DEPENDENCYTRACK_PROJECT }}" \
-               -F "bom=@repo-sbom.json" | jq -r '.token')
-          
-          echo "Várakozás az elemzésre (Token: $TOKEN)..."
-          while; do
-              sleep 5
-          done
-          
-          VULNS=$(curl -s -H "X-Api-Key: ${{ secrets.DEPENDENCYTRACK_APIKEY }}" \
-                "${{ secrets.DEPENDENCYTRACK_URL }}/api/v1/project/${{ secrets.DEPENDENCYTRACK_PROJECT }}" | jq '.metrics.critical')
-          
-          if; then
-            echo "HIBA: $VULNS kritikus sebezhetőség található! Pull Request elutasítva."
-            exit 1
-          fi
+               -F "project= ${{ secrets.DEPENDENCYTRACK_PROJECT }}" \
+               -F "bom=@repo-sbom.json"

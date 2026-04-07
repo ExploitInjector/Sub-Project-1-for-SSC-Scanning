@@ -14,6 +14,6 @@ dependencies = [
     "tensorflow==2.12.0",        # CVE-2023-25658: Buffer overflow in model parsing (Critical)
     "pillow==9.0.0",             # CVE-2022-22817: Arbitrary Code Execution (High)
     "pypdf==3.8.0",              # CVE-2023-36464: Infinite Loop DoS (Medium)
-    "onnx==1.14.0",              # CVE-2024-5187: Critical Remote Code Execution (Critical)
-    "torch==2.0.0",              # CVE-2025-32434: Remote Code Execution (Critical)
+    #"onnx==1.14.0",              # CVE-2024-5187: Critical Remote Code Execution (Critical)
+    #"torch==2.0.0",              # CVE-2025-32434: Remote Code Execution (Critical)
 ]
