@@ -20,10 +20,12 @@ jobs:
 
       # 1. Syft telepítése és SBOM generálása
       - name: Install Syft
+        id: install_syft
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
       - name: Generate SBOM for Repository with Syft
+        id: generate_sbom
         run: |
           syft dir:. \
           --select-catalogers python \
@@ -31,6 +33,7 @@ jobs:
 
       # 2. Trivy futtatása a Syft SBOM-on (Action segítségével)
       - name: Scan Syft SBOM with Trivy
+        id: trivy_scan
         uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: 'sbom'
@@ -39,25 +42,39 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
+          exit-code: '1'
 
       # 3. SARIF eredmények feltöltése a GitHub Security fülre
       - name: Upload Trivy scan results to GitHub Security tab
+        id: upload_sarif
         uses: github/codeql-action/upload-sarif@v4
+        if: always()
         with:
           sarif_file: 'trivy-results.sarif'
 
       # 4. Az eredeti Syft SBOM lementése artifact-ként (maradhat, ha szükséged van rá)
       - name: Upload Syft SBOM as Artifact
+        id: upload_sbom
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: Syft-SBOM
           path: repo-sbom.json
 
       # 5. SBOM feltöltése Dependency-Track-re curl használatával
       - name: Upload SBOM to Dependency-Track via curl
+        id: upload_dependencytrack
         run: |
           curl -v -X "POST" "${{ secrets.DEPENDENCYTRACK_URL }}" \
                -H 'Content-Type: multipart/form-data' \
                -H "X-Api-Key: ${{ secrets.DEPENDENCYTRACK_APIKEY }}" \
                -F "project= ${{ secrets.DEPENDENCYTRACK_PROJECT }}" \
                -F "bom=@repo-sbom.json"
+
+      # 6. A folyamat megbuktatása, ha a Trivy hibát talált
+      - name: Check Trivy status and fail if needed
+        id: check_trivy
+        if: steps.trivy_scan.outcome == 'failure'
+        run: |
+          echo "Trivy talált HIGH vagy CRITICAL sérülékenységet."
+          exit 1
