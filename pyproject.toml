@@ -8,8 +8,8 @@ version = "0.1.0"
 description = "Test project for Syft and Trivy SBOM generation"
 requires-python = "==3.11.*"
 dependencies = [
-    #"tensorflow==2.12.0",        # CVE-2023-25658: Buffer overflow in model parsing (Critical)
-    #"pillow==9.0.0",             # CVE-2022-22817: Arbitrary Code Execution (High)
+    "tensorflow==2.12.0",        # CVE-2023-25658: Buffer overflow in model parsing (Critical)
+    "pillow==9.0.0",             # CVE-2022-22817: Arbitrary Code Execution (High)
     ##########################################################################################
     # Extra vulnerable dependencies to test SBOM generation and vulnerability detection in SSC
     ##########################################################################################
