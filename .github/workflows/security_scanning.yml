@@ -26,8 +26,8 @@ jobs:
       - name: Generate SBOM for Repository with Syft
         run: |
           syft dir:. \
-          --override-default-config \
-          --catalogers python-package-cataloger \
+          --select-catalogers python \
+          --add-hashes \
           -o cyclonedx-json > repo-sbom.json
 
       # 2. Trivy futtatása a Syft SBOM-on (Action segítségével)
