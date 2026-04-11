@@ -24,7 +24,11 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
       - name: Generate SBOM for Repository with Syft
-        run: syft dir:. -o cyclonedx-json > repo-sbom.json
+        run: |
+          syft dir:. \
+          --override-default-config \
+          --catalogers python-package-cataloger \
+          -o cyclonedx-json > repo-sbom.json
 
       # 2. Trivy futtatása a Syft SBOM-on (Action segítségével)
       - name: Scan Syft SBOM with Trivy
