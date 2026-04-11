@@ -27,7 +27,7 @@ jobs:
         run: |
           syft dir:. \
           --select-catalogers python \
-          --add-hashes \
+          --file-metadata-digests sha256 \
           -o cyclonedx-json > repo-sbom.json
 
       # 2. Trivy futtatása a Syft SBOM-on (Action segítségével)
