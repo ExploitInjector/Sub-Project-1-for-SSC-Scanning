@@ -11,14 +11,13 @@ jobs:
   security-scan:
     runs-on: ubuntu-24.04
     permissions:
-      contents: read          # Kód letöltéséhez kell
-      security-events: write  # A GitHub Security fül írásához (SARIF feltöltés)
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Syft telepítése és SBOM generálása
       - name: Install Syft
         id: install_syft
         run: |
@@ -35,6 +34,7 @@ jobs:
       - name: Scan Syft SBOM with Trivy
         id: trivy_scan
         uses: aquasecurity/trivy-action@0.35.0
+        continue-on-error: true
         with:
           scan-type: 'sbom'
           scan-ref: 'repo-sbom.json'  # Ide adjuk át a Syft SBOM fájlt!
@@ -64,6 +64,7 @@ jobs:
       # 5. SBOM feltöltése Dependency-Track-re curl használatával
       - name: Upload SBOM to Dependency-Track via curl
         id: upload_dependencytrack
+        continue-on-error: true
         run: |
           curl -v -X "POST" "${{ secrets.DEPENDENCYTRACK_URL }}" \
                -H 'Content-Type: multipart/form-data' \
@@ -71,10 +72,10 @@ jobs:
                -F "project= ${{ secrets.DEPENDENCYTRACK_PROJECT }}" \
                -F "bom=@repo-sbom.json"
 
-      # 6. A folyamat megbuktatása, ha a Trivy hibát talált
-      - name: Check Trivy status and fail if needed
+      # Trivy megbukott - job failure
+      - name: Check Trivy status and fail job if vulnerabilities found
         id: check_trivy
         if: steps.trivy_scan.outcome == 'failure'
         run: |
-          echo "Trivy talált HIGH vagy CRITICAL sérülékenységet."
+          echo "::error::Trivy talált HIGH vagy CRITICAL sérülékenységet!"
           exit 1
